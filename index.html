@@ -243,6 +243,71 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
 }
+
+/* Bo'lim tugmalari */
+.filters{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 34px}
+.filter-btn{
+  font:inherit;font-weight:700;font-size:.95rem;cursor:pointer;
+  padding:10px 20px;border-radius:999px;
+  background:#fff;color:var(--navy);border:1px solid var(--line);
+  transition:background .2s,color .2s,border-color .2s;
+}
+.filter-btn:hover{border-color:var(--green)}
+.filter-btn.active{background:var(--green);border-color:var(--green);color:#fff}
+.card[hidden]{display:none}
+.card .add-btn{margin-top:18px;width:100%;font:inherit;font-weight:700;cursor:pointer}
+
+/* Savat */
+.cart{
+  margin-top:44px;padding:28px 26px;border-radius:var(--radius);
+  background:#fff;border:1px solid var(--line);
+}
+.cart h3{margin:0 0 16px;font-size:1.4rem;font-weight:800;color:var(--navy)}
+.cart-empty{margin:0;color:var(--muted)}
+.cart-list{list-style:none;margin:0;padding:0}
+.cart-row{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  padding:14px 0;border-bottom:1px solid var(--line);
+}
+.cart-row .name{font-weight:700;color:var(--navy)}
+.cart-row .name small{display:block;font-weight:500;color:var(--muted);font-size:.9rem}
+.qty{display:flex;align-items:center;gap:10px}
+.qty button{
+  width:38px;height:38px;border-radius:50%;cursor:pointer;
+  font:inherit;font-size:1.2rem;font-weight:800;line-height:1;
+  background:var(--ice);color:var(--navy);border:1px solid var(--line);
+}
+.qty button:hover{border-color:var(--green);color:var(--green-dark)}
+.qty b{min-width:28px;text-align:center;font-size:1.1rem}
+.cart-row .line-sum{min-width:110px;text-align:right;font-weight:800;color:var(--navy)}
+.cart-foot{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:20px}
+.cart-total{font-size:1.1rem;color:var(--muted)}
+.cart-total b{font-size:1.6rem;font-weight:800;color:var(--navy);margin-left:6px}
+.cart-foot .btn{font:inherit;font-weight:700;cursor:pointer}
+.cart-foot .btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* Buyurtma oynasi */
+.order-modal{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(6,27,61,.6)}
+.order-modal.open{display:flex}
+.order-box{
+  width:min(480px,100%);max-height:90vh;overflow:auto;
+  padding:30px 26px;border-radius:var(--radius);
+  background:#fff;color:var(--ink);box-shadow:0 26px 60px rgba(0,0,0,.35);
+}
+.order-box h3{margin:0 0 14px;font-size:1.4rem;font-weight:800;color:var(--navy)}
+.order-box ul{margin:0 0 14px;padding-left:20px}
+.order-box li{margin-bottom:6px}
+.order-box .o-total{font-weight:800;font-size:1.15rem;color:var(--navy);padding-top:12px;border-top:1px solid var(--line)}
+.order-box .o-phone{margin:18px 0;padding:16px;border-radius:14px;background:var(--mint);text-align:center}
+.order-box .o-phone small{display:block;color:var(--muted)}
+.order-box .o-phone a{font-size:1.4rem;font-weight:800;color:var(--green-dark);text-decoration:none}
+.order-actions{display:flex;flex-wrap:wrap;gap:10px}
+.order-actions .btn{flex:1;font:inherit;font-weight:700;cursor:pointer}
+.btn-navy-line{border-color:var(--line);color:var(--navy);background:#fff}
+.btn-navy-line:hover{background:var(--ice)}
+@media (max-width:860px){
+  .cart-row .line-sum{min-width:0}
+}
 </style>
 </head>
 <body>
@@ -316,26 +381,44 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
     <div class="wrap">
       <h2 class="section-title">Mahsulotlar va narxlar</h2>
       <p class="section-sub">Qadoqlangan ichimlik suvi uch xil hajmda. Ulgurji buyurtma uchun qo‘ng‘iroq qiling.</p>
+      <div class="filters" role="group" aria-label="Bo‘limlar">
+        <button type="button" class="filter-btn active" data-filter="all">Hammasi</button>
+        <button type="button" class="filter-btn" data-filter="5">5L suvlar</button>
+        <button type="button" class="filter-btn" data-filter="10">10L suvlar</button>
+        <button type="button" class="filter-btn" data-filter="19">19L suvlar</button>
+      </div>
       <div class="grid3">
-        <article class="card">
+        <article class="card" data-cat="5">
           <div class="pair-photo" role="img" aria-label="Aqualife 5 va 10 litrlik suv butilkalari"></div>
           <div class="vol">5<small>L</small></div>
           <h3>Qadoqlangan ichimlik suvi</h3>
           <div class="sum">7 000 <small>so‘m</small></div>
+          <button type="button" class="btn btn-green add-btn" data-id="5">Savatga</button>
         </article>
-        <article class="card main">
+        <article class="card main" data-cat="19">
           <span class="badge">Asosiy mahsulot</span>
           <div class="card-photo" role="img" aria-label="Aqualife 19 litrlik suv butilkasi"></div>
           <div class="vol">19<small>L</small></div>
           <h3>Qadoqlangan ichimlik suvi</h3>
           <div class="sum">12 000 <small>so‘m</small></div>
+          <button type="button" class="btn btn-green add-btn" data-id="19">Savatga</button>
         </article>
-        <article class="card">
+        <article class="card" data-cat="10">
           <div class="pair-photo" role="img" aria-label="Aqualife 5 va 10 litrlik suv butilkalari"></div>
           <div class="vol">10<small>L</small></div>
           <h3>Qadoqlangan ichimlik suvi</h3>
           <div class="sum">11 000 <small>so‘m</small></div>
+          <button type="button" class="btn btn-green add-btn" data-id="10">Savatga</button>
         </article>
+      </div>
+      <div class="cart" id="savat">
+        <h3>Savat</h3>
+        <p class="cart-empty" id="cartEmpty">Savat hozircha bo‘sh. Suvni tanlab, «Savatga» tugmasini bosing.</p>
+        <ul class="cart-list" id="cartList"></ul>
+        <div class="cart-foot">
+          <div class="cart-total">Jami: <b id="cartTotal">0 so‘m</b></div>
+          <button type="button" class="btn btn-green" id="orderBtn" disabled>Buyurtma berish</button>
+        </div>
       </div>
       <p class="note">Buyurtma berish uchun: <a href="tel:+998777091515"><b>+998 77 709 15 15</b></a></p>
     </div>
@@ -418,6 +501,112 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
     Buyurtma berish
   </a>
 </div>
+
+<div class="order-modal" id="orderModal" role="dialog" aria-modal="true" aria-labelledby="orderTitle">
+  <div class="order-box">
+    <h3 id="orderTitle">Buyurtmangiz</h3>
+    <ul id="orderList"></ul>
+    <div class="o-total" id="orderTotal"></div>
+    <div class="o-phone">
+      <small>Buyurtmani tasdiqlash uchun qo‘ng‘iroq qiling:</small>
+      <a href="tel:+998777091515">+998 77 709 15 15</a>
+    </div>
+    <div class="order-actions">
+      <a class="btn btn-green" href="tel:+998777091515">Qo‘ng‘iroq qilish</a>
+      <button type="button" class="btn btn-navy-line" id="orderClose">Yopish</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var products={
+    '5':{name:'5 L ichimlik suvi',price:7000},
+    '10':{name:'10 L ichimlik suvi',price:11000},
+    '19':{name:'19 L ichimlik suvi',price:12000}
+  };
+  var cart={};
+  function som(n){return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ')+' so‘m';}
+
+  // Bo'lim tugmalari
+  var filterBtns=document.querySelectorAll('.filter-btn');
+  var cards=document.querySelectorAll('.grid3 .card');
+  filterBtns.forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var f=btn.getAttribute('data-filter');
+      filterBtns.forEach(function(b){b.classList.toggle('active',b===btn);});
+      cards.forEach(function(c){c.hidden=!(f==='all'||c.getAttribute('data-cat')===f);});
+    });
+  });
+
+  // Savat
+  var list=document.getElementById('cartList'),
+      empty=document.getElementById('cartEmpty'),
+      totalEl=document.getElementById('cartTotal'),
+      orderBtn=document.getElementById('orderBtn');
+
+  function total(){var t=0;for(var id in cart)t+=cart[id]*products[id].price;return t;}
+
+  function render(){
+    list.innerHTML='';
+    var ids=['5','10','19'].filter(function(id){return cart[id]>0;});
+    ids.forEach(function(id){
+      var p=products[id],q=cart[id];
+      var li=document.createElement('li');
+      li.className='cart-row';
+      li.innerHTML='<div class="name">'+p.name+'<small>'+som(p.price)+' / dona</small></div>'+
+        '<div class="qty"><button type="button" data-act="minus" data-id="'+id+'" aria-label="Kamaytirish">−</button>'+
+        '<b>'+q+'</b>'+
+        '<button type="button" data-act="plus" data-id="'+id+'" aria-label="Ko‘paytirish">+</button></div>'+
+        '<div class="line-sum">'+som(q*p.price)+'</div>';
+      list.appendChild(li);
+    });
+    empty.style.display=ids.length?'none':'';
+    totalEl.textContent=som(total());
+    orderBtn.disabled=!ids.length;
+  }
+
+  document.querySelectorAll('.add-btn').forEach(function(b){
+    b.addEventListener('click',function(){
+      var id=b.getAttribute('data-id');
+      cart[id]=(cart[id]||0)+1;
+      render();
+      b.textContent='Qo‘shildi ✓';
+      setTimeout(function(){b.textContent='Savatga';},1000);
+    });
+  });
+
+  list.addEventListener('click',function(e){
+    var b=e.target.closest('button');
+    if(!b)return;
+    var id=b.getAttribute('data-id');
+    if(b.getAttribute('data-act')==='plus')cart[id]++;
+    else{cart[id]--;if(cart[id]<=0)delete cart[id];}
+    render();
+  });
+
+  // Buyurtma
+  var modal=document.getElementById('orderModal');
+  orderBtn.addEventListener('click',function(){
+    var ol=document.getElementById('orderList');
+    ol.innerHTML='';
+    ['5','10','19'].forEach(function(id){
+      if(!cart[id])return;
+      var li=document.createElement('li');
+      li.textContent=products[id].name+' — '+cart[id]+' dona × '+som(products[id].price)+' = '+som(cart[id]*products[id].price);
+      ol.appendChild(li);
+    });
+    document.getElementById('orderTotal').textContent='Jami summa: '+som(total());
+    modal.classList.add('open');
+  });
+  function close(){modal.classList.remove('open');}
+  document.getElementById('orderClose').addEventListener('click',close);
+  modal.addEventListener('click',function(e){if(e.target===modal)close();});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+
+  render();
+})();
+</script>
 
 </body>
 </html>
