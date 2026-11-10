@@ -314,6 +314,23 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
 .order-actions .btn{flex:1;font:inherit;font-weight:700;cursor:pointer}
 .btn-navy-line{border-color:var(--line);color:var(--navy);background:#fff}
 .btn-navy-line:hover{background:var(--ice)}
+.o-form{margin-top:18px}
+.o-form label{display:block;margin:12px 0 6px;font-weight:700;color:var(--navy);font-size:.95rem}
+.o-form input,.o-form textarea{
+  width:100%;padding:12px 14px;border-radius:12px;
+  border:1px solid var(--line);background:var(--ice);color:var(--ink);
+  font:inherit;resize:vertical;
+}
+.o-form input:focus,.o-form textarea:focus{outline:none;border-color:var(--green);background:#fff}
+.o-form .invalid{border-color:#D64545}
+.o-form .order-actions{margin-top:16px}
+.o-form .btn:disabled{opacity:.6;cursor:wait}
+.o-hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.o-msg{margin:12px 0 0;min-height:0;color:#D64545;font-weight:600;font-size:.95rem}
+.o-msg:empty{display:none}
+.o-done{margin-top:18px;padding:20px 16px;border-radius:14px;background:var(--mint);text-align:center}
+.o-done p{margin:0;font-size:1.25rem;font-weight:800;color:var(--green-dark)}
+.o-done small{display:block;margin:6px 0 16px;color:var(--muted)}
 @media (max-width:860px){
   .cart-row .line-sum{min-width:0}
 }
@@ -331,7 +348,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
       <a href="#mahsulotlar">Mahsulotlar</a>
       <a href="#afzalliklar">Afzalliklar</a>
       <a href="#aloqa">Aloqa</a>
-      <a class="btn btn-green btn-small" href="tel:+998777091515">
+      <a class="btn btn-green btn-small" href="tel:+998950091980">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.6a1 1 0 0 1-.25 1z"/></svg>
         Qo‘ng‘iroq
       </a>
@@ -350,7 +367,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
         <h1>Surxondaryo uchun toza ichimlik suvi</h1>
         <p class="lead">19 litrlik qadoqlangan suv to‘g‘ridan-to‘g‘ri ishlab chiqaruvchidan: ko‘p bosqichli filtrlash, kimyoviy qo‘shimchalarsiz, hamyonbop narxda.</p>
         <div class="hero-cta">
-          <a class="btn btn-green" href="tel:+998777091515">Buyurtma berish</a>
+          <a class="btn btn-green" href="tel:+998950091980">Buyurtma berish</a>
           <a class="btn btn-line" href="#mahsulotlar">Narxlarni ko‘rish</a>
         </div>
       </div>
@@ -431,7 +448,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
           <button type="button" class="btn btn-green" id="orderBtn" disabled>Buyurtma berish</button>
         </div>
       </div>
-      <p class="note">Buyurtma berish uchun: <a href="tel:+998777091515"><b>+998 77 709 15 15</b></a></p>
+      <p class="note">Buyurtma berish uchun: <a href="tel:+998950091980"><b>+998 95 009 19 80</b></a></p>
     </div>
   </section>
 
@@ -475,9 +492,9 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
       <h2 class="section-title">Aloqa</h2>
       <p class="section-sub">Qo‘ng‘iroq qiling yoki xat yozing, buyurtmangizni qabul qilamiz.</p>
       <div class="contact-grid">
-        <a class="c-item" href="tel:+998777091515">
+        <a class="c-item" href="tel:+998950091980">
           <span class="c-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.6a1 1 0 0 1-.25 1z"/></svg></span>
-          <div><small>Telefon</small><b>+998 77 709 15 15</b></div>
+          <div><small>Telefon</small><b>+998 95 009 19 80</b></div>
         </a>
         <a class="c-item" href="mailto:aqualifebottles@gmail.com">
           <span class="c-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm9 7.2L4.6 7 4 8l8 5.6L20 8l-.6-1z"/></svg></span>
@@ -493,7 +510,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
         </div>
       </div>
       <div class="call-big">
-        <a class="btn btn-green" href="tel:+998777091515">Hozir qo‘ng‘iroq qilish</a>
+        <a class="btn btn-green" href="tel:+998950091980">Hozir qo‘ng‘iroq qilish</a>
       </div>
     </div>
   </section>
@@ -507,7 +524,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
 </footer>
 
 <div class="cta-bar">
-  <a class="btn btn-green" href="tel:+998777091515">
+  <a class="btn btn-green" href="tel:+998950091980">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.6a1 1 0 0 1-.25 1z"/></svg>
     Buyurtma berish
   </a>
@@ -518,13 +535,33 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
     <h3 id="orderTitle">Buyurtmangiz</h3>
     <ul id="orderList"></ul>
     <div class="o-total" id="orderTotal"></div>
-    <div class="o-phone">
-      <small>Buyurtmani tasdiqlash uchun qo‘ng‘iroq qiling:</small>
-      <a href="tel:+998777091515">+998 77 709 15 15</a>
+    <form class="o-form" id="orderForm" novalidate>
+      <label for="oName">Ismingiz *</label>
+      <input type="text" id="oName" name="name" maxlength="60" autocomplete="name" placeholder="Masalan: Alisher" required>
+      <label for="oPhone">Telefon raqamingiz *</label>
+      <input type="tel" id="oPhone" name="phone" maxlength="20" autocomplete="tel" inputmode="tel" placeholder="+998 90 123 45 67" required>
+      <label for="oNote">Manzil yoki izoh</label>
+      <textarea id="oNote" name="note" maxlength="300" rows="3" placeholder="Masalan: Denov, Mustaqillik ko‘chasi, 12-uy"></textarea>
+      <div class="o-hp" aria-hidden="true">
+        <label for="oWebsite">Bu maydonni bo‘sh qoldiring</label>
+        <input type="text" id="oWebsite" name="website" tabindex="-1" autocomplete="off">
+      </div>
+      <p class="o-msg" id="orderMsg" role="alert"></p>
+      <div class="order-actions">
+        <button type="submit" class="btn btn-green" id="orderSend">Yuborish</button>
+        <button type="button" class="btn btn-navy-line" data-close>Yopish</button>
+      </div>
+    </form>
+    <div class="o-phone" id="orderError" hidden>
+      <small>Buyurtmani yuborib bo‘lmadi. Iltimos, qo‘ng‘iroq qiling:</small>
+      <a href="tel:+998950091980">+998 95 009 19 80</a>
     </div>
-    <div class="order-actions">
-      <a class="btn btn-green" href="tel:+998777091515">Qo‘ng‘iroq qilish</a>
-      <button type="button" class="btn btn-navy-line" id="orderClose">Yopish</button>
+    <div class="o-done" id="orderDone" hidden>
+      <p>Rahmat! Buyurtmangiz qabul qilindi</p>
+      <small>Tez orada siz bilan bog‘lanamiz.</small>
+      <div class="order-actions">
+        <button type="button" class="btn btn-green" data-close>Yopish</button>
+      </div>
     </div>
   </div>
 </div>
@@ -597,8 +634,19 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
   });
 
   // Buyurtma
-  var modal=document.getElementById('orderModal');
-  orderBtn.addEventListener('click',function(){
+  var modal=document.getElementById('orderModal'),
+      form=document.getElementById('orderForm'),
+      msg=document.getElementById('orderMsg'),
+      sendBtn=document.getElementById('orderSend'),
+      errBox=document.getElementById('orderError'),
+      doneBox=document.getElementById('orderDone'),
+      fName=document.getElementById('oName'),
+      fPhone=document.getElementById('oPhone'),
+      fNote=document.getElementById('oNote'),
+      fHp=document.getElementById('oWebsite');
+  var openedAt=0,sending=false,COOLDOWN=60000;
+
+  function fillSummary(){
     var ol=document.getElementById('orderList');
     ol.innerHTML='';
     ['5','10','19'].forEach(function(id){
@@ -608,12 +656,64 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
       ol.appendChild(li);
     });
     document.getElementById('orderTotal').textContent='Jami summa: '+som(total());
+  }
+
+  orderBtn.addEventListener('click',function(){
+    fillSummary();
+    form.hidden=false;doneBox.hidden=true;errBox.hidden=true;msg.textContent='';
+    openedAt=Date.now();
     modal.classList.add('open');
+    setTimeout(function(){fName.focus();},50);
   });
   function close(){modal.classList.remove('open');}
-  document.getElementById('orderClose').addEventListener('click',close);
+  modal.querySelectorAll('[data-close]').forEach(function(b){b.addEventListener('click',close);});
   modal.addEventListener('click',function(e){if(e.target===modal)close();});
   document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+
+  function clean(v){return v.replace(/\s+/g,' ').trim();}
+  function phoneOk(v){var d=v.replace(/\D/g,'');return /^[+\d\s()\-]+$/.test(v)&&(d.length===9||(d.length===12&&d.indexOf('998')===0));}
+  function fail(text,el){
+    msg.textContent=text;
+    if(el){el.classList.add('invalid');el.focus();}
+  }
+  [fName,fPhone,fNote].forEach(function(el){el.addEventListener('input',function(){el.classList.remove('invalid');msg.textContent='';});});
+
+  form.addEventListener('submit',function(e){
+    e.preventDefault();
+    if(sending)return;
+    msg.textContent='';errBox.hidden=true;
+    var name=clean(fName.value),phone=clean(fPhone.value),note=clean(fNote.value);
+    var items=['5','10','19'].filter(function(id){return cart[id]>0;}).map(function(id){return {id:id,qty:cart[id]};});
+
+    if(!items.length)return fail('Savat bo‘sh. Avval suv tanlang.');
+    if(name.length<2)return fail('Ismingizni kiriting.',fName);
+    if(name.length>60)return fail('Ism juda uzun (ko‘pi bilan 60 ta belgi).',fName);
+    if(!phoneOk(phone))return fail('Telefon raqamini to‘g‘ri kiriting, masalan: +998 90 123 45 67.',fPhone);
+    if(note.length>300)return fail('Izoh juda uzun (ko‘pi bilan 300 ta belgi).',fNote);
+    // Spamdan himoya: yashirin maydon, juda tez yuborish va qayta-qayta yuborish
+    if(fHp.value)return;
+    if(Date.now()-openedAt<3000)return fail('Iltimos, bir necha soniya kutib, qaytadan bosing.');
+    var last=+localStorage.getItem('aqOrderAt')||0;
+    if(Date.now()-last<COOLDOWN)return fail('Buyurtma yaqinda yuborilgan. Iltimos, 1 daqiqadan so‘ng qayta urinib ko‘ring.');
+
+    sending=true;sendBtn.disabled=true;sendBtn.textContent='Yuborilmoqda…';
+    fetch('/.netlify/functions/order',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name:name,phone:phone,note:note,items:items,website:fHp.value,elapsed:Date.now()-openedAt})
+    }).then(function(r){
+      return r.json().catch(function(){return {};}).then(function(d){if(!r.ok||!d.ok)throw new Error(d.error||'xato');});
+    }).then(function(){
+      try{localStorage.setItem('aqOrderAt',String(Date.now()));}catch(_){}
+      cart={};render();form.reset();
+      form.hidden=true;doneBox.hidden=false;
+    }).catch(function(){
+      msg.textContent='Xatolik yuz berdi.';
+      errBox.hidden=false;
+    }).then(function(){
+      sending=false;sendBtn.disabled=false;sendBtn.textContent='Yuborish';
+    });
+  });
 
   render();
 })();
