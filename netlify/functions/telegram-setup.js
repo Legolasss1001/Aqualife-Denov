@@ -10,6 +10,7 @@ const crypto = require('crypto');
 const COMMANDS = [
   { command: 'start', description: 'Buyruqlar ro‘yxati' },
   { command: 'bugun', description: 'Bugungi buyurtmalar soni va jami summasi' },
+  { command: 'hafta', description: 'Shu haftadagi buyurtmalar soni va jami summasi' },
   { command: 'buyurtmalar', description: 'Oxirgi 10 ta buyurtma' },
 ];
 
