@@ -19,7 +19,7 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&
 
 function page(title, rows, note) {
   const items = rows.map((r) =>
-    `<li class="${r.ok ? 'ok' : 'err'}"><b>${r.ok ? '✅' : '❌'} ${esc(r.title)}</b>${r.detail ? `<span>${esc(r.detail)}</span>` : ''}</li>`).join('');
+    `<li class="${r.info ? 'info' : r.ok ? 'ok' : 'err'}"><b>${r.info ? 'ℹ️' : r.ok ? '✅' : '❌'} ${esc(r.title)}</b>${r.detail ? `<span>${esc(r.detail)}</span>` : ''}</li>`).join('');
   const html = `<!doctype html>
 <html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex"><title>${esc(title)}</title>
@@ -27,7 +27,7 @@ function page(title, rows, note) {
 body{margin:0;padding:24px 16px;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#F4F8FC;color:#0A2C5E}
 main{max-width:640px;margin:0 auto;background:#fff;border-radius:16px;padding:24px;box-shadow:0 6px 24px rgba(10,44,94,.08)}
 h1{margin:0 0 16px;font-size:1.4rem}ul{list-style:none;margin:0;padding:0}
-li{padding:12px 14px;border-radius:12px;margin-bottom:10px;background:#EAF7EF}li.err{background:#FDECEC}
+li{padding:12px 14px;border-radius:12px;margin-bottom:10px;background:#EAF7EF}li.err{background:#FDECEC}li.info{background:#EEF3FA}
 li span{display:block;margin-top:4px;font-size:.92rem;color:#4A5B75;word-break:break-word}
 p{color:#4A5B75;line-height:1.5}
 </style></head><body><main><h1>${esc(title)}</h1><ul>${items}</ul>${note ? `<p>${esc(note)}</p>` : ''}</main></body></html>`;
@@ -60,6 +60,15 @@ exports.handler = async (event) => {
   if (!origin.startsWith('https://')) {
     return page('Telegram botni sozlash', [{ ok: false, title: 'Sayt manzili HTTPS emas', detail: 'Telegram faqat HTTPS manzillarni qabul qiladi.' }]);
   }
+  // Deploy Preview / branch manzillari (masalan deploy-preview-5--sayt.netlify.app) Netlify
+  // tomonidan login bilan yopilgan bo'lishi mumkin: Telegram ham, mijoz ham u yerga kira olmaydi.
+  if (/^[^.]+--[^.]+\.netlify\.app$/i.test(new URL(origin).hostname)) {
+    return page('Telegram botni sozlash', [{
+      ok: false,
+      title: 'Bu sahifa sinov (preview) manzilida ochilgan',
+      detail: `${origin} — bu asosiy sayt emas. Sahifani asosiy sayt manzilida oching: https://<sayt-nomi>.netlify.app/.netlify/functions/telegram-setup`,
+    }]);
+  }
   const webhookUrl = `${origin}/.netlify/functions/telegram`;
   const appUrl = `${origin}/`;
 
@@ -85,6 +94,17 @@ exports.handler = async (event) => {
     ? { ok: true, title: 'Bot topildi', detail: `@${me.result.username}` }
     : { ok: false, title: 'Bot tokeni noto‘g‘ri yoki Telegram javob bermadi', detail: me.error });
   if (!me.ok) return page('Telegram botni sozlash', rows);
+
+  const prev = await call('getWebhookInfo');
+  if (prev.ok && prev.result) {
+    const r = prev.result;
+    const detail = [`Manzil: ${r.url || '— (o‘rnatilmagan)'}`];
+    if (r.last_error_message) {
+      detail.push(`Oxirgi xato: ${r.last_error_message} (${new Date(r.last_error_date * 1000).toISOString().replace('T', ' ').slice(0, 16)} UTC)`);
+    }
+    if (r.pending_update_count) detail.push(`Kutilayotgan xabarlar: ${r.pending_update_count}`);
+    rows.push({ info: true, title: 'Avvalgi webhook holati (ma’lumot uchun)', detail: hide(detail.join(' · ')) });
+  }
 
   const hook = await call('setWebhook', {
     url: webhookUrl,
@@ -113,7 +133,7 @@ exports.handler = async (event) => {
     ? { ok: true, title: '«Menyu» tugmasi sozlandi', detail: `Mini App: ${appUrl}` }
     : { ok: false, title: '«Menyu» tugmasi sozlanmadi', detail: menu.error });
 
-  const allOk = rows.every((r) => r.ok);
+  const allOk = rows.every((r) => r.info || r.ok);
   return page(
     allOk ? 'Telegram bot muvaffaqiyatli sozlandi' : 'Telegram botni sozlashda xatolik bor',
     rows,
