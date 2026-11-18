@@ -328,6 +328,11 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
 .o-hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 .o-msg{margin:12px 0 0;min-height:0;color:#D64545;font-weight:600;font-size:.95rem}
 .o-msg:empty{display:none}
+.o-form .o-consent{display:flex;align-items:flex-start;gap:10px;margin:14px 0 0;font-weight:500;font-size:.92rem;color:var(--ink);line-height:1.5;cursor:pointer}
+.o-form .o-consent input{flex:none;width:20px;height:20px;margin:2px 0 0;padding:0;accent-color:var(--green);cursor:pointer}
+.o-form .o-consent input.invalid{outline:2px solid #D64545;outline-offset:2px}
+.o-form .o-consent a{color:var(--green-dark);font-weight:700}
+footer a{color:inherit}
 .o-done{margin-top:18px;padding:20px 16px;border-radius:14px;background:var(--mint);text-align:center}
 .o-done p{margin:0;font-size:1.25rem;font-weight:800;color:var(--green-dark)}
 .o-done small{display:block;margin:6px 0 16px;color:var(--muted)}
@@ -519,7 +524,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
 <footer>
   <div class="wrap">
     <span>© 2026 Aqualife-Denov</span>
-    <span>Denov, Surxondaryo</span>
+    <span>Denov, Surxondaryo · <a href="privacy.html">Maxfiylik siyosati</a></span>
   </div>
 </footer>
 
@@ -542,6 +547,10 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
       <input type="tel" id="oPhone" name="phone" maxlength="20" autocomplete="tel" inputmode="tel" placeholder="+998 90 123 45 67" required>
       <label for="oNote">Manzil yoki izoh</label>
       <textarea id="oNote" name="note" maxlength="300" rows="3" placeholder="Masalan: Denov, Mustaqillik ko‘chasi, 12-uy"></textarea>
+      <label class="o-consent" for="oConsent">
+        <input type="checkbox" id="oConsent" name="consent" required>
+        <span>Ma’lumotlarim buyurtmani bajarish uchun ishlatilishiga roziman. <a href="privacy.html" target="_blank" rel="noopener">Maxfiylik siyosati</a></span>
+      </label>
       <div class="o-hp" aria-hidden="true">
         <label for="oWebsite">Bu maydonni bo‘sh qoldiring</label>
         <input type="text" id="oWebsite" name="website" tabindex="-1" autocomplete="off">
@@ -643,6 +652,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
       fName=document.getElementById('oName'),
       fPhone=document.getElementById('oPhone'),
       fNote=document.getElementById('oNote'),
+      fConsent=document.getElementById('oConsent'),
       fHp=document.getElementById('oWebsite');
   var openedAt=0,sending=false,COOLDOWN=60000;
 
@@ -676,7 +686,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
     msg.textContent=text;
     if(el){el.classList.add('invalid');el.focus();}
   }
-  [fName,fPhone,fNote].forEach(function(el){el.addEventListener('input',function(){el.classList.remove('invalid');msg.textContent='';});});
+  [fName,fPhone,fNote,fConsent].forEach(function(el){el.addEventListener('input',function(){el.classList.remove('invalid');msg.textContent='';});});
 
   form.addEventListener('submit',function(e){
     e.preventDefault();
@@ -690,6 +700,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
     if(name.length>60)return fail('Ism juda uzun (ko‘pi bilan 60 ta belgi).',fName);
     if(!phoneOk(phone))return fail('Telefon raqamini to‘g‘ri kiriting, masalan: +998 90 123 45 67.',fPhone);
     if(note.length>300)return fail('Izoh juda uzun (ko‘pi bilan 300 ta belgi).',fNote);
+    if(!fConsent.checked)return fail('Buyurtma berish uchun ma’lumotlaringiz ishlatilishiga rozilik belgisini qo‘ying.',fConsent);
     // Spamdan himoya: yashirin maydon, juda tez yuborish va qayta-qayta yuborish
     if(fHp.value)return;
     if(Date.now()-openedAt<3000)return fail('Iltimos, bir necha soniya kutib, qaytadan bosing.');
@@ -700,7 +711,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
     fetch('/.netlify/functions/order',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({name:name,phone:phone,note:note,items:items,website:fHp.value,elapsed:Date.now()-openedAt})
+      body:JSON.stringify({name:name,phone:phone,note:note,items:items,consent:fConsent.checked,website:fHp.value,elapsed:Date.now()-openedAt})
     }).then(function(r){
       return r.json().catch(function(){return {};}).then(function(d){if(!r.ok||!d.ok)throw new Error(d.error||'xato');});
     }).then(function(){

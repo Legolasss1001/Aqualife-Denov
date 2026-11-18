@@ -1,6 +1,7 @@
-// Buyurtmani Telegram'ga yuboruvchi Netlify funksiyasi.
-// Bot tokeni va chat ID faqat Netlify muhit o'zgaruvchilaridan olinadi:
-//   Telegram_Bot_Token, Telegram_Chat_ID
+// Buyurtmani Supabase bazasiga yozib, so'ng Telegram'ga yuboruvchi Netlify funksiyasi.
+// Barcha maxfiy sozlamalar faqat Netlify muhit o'zgaruvchilaridan olinadi:
+//   Telegram_Bot_Token, Telegram_Chat_ID — Telegram bot
+//   SUPABASE_URL, SUPABASE_SECRET_KEY    — Supabase loyihasi
 
 // Narxlar serverda saqlanadi — mijoz yuborgan summaga ishonilmaydi.
 const PRODUCTS = {
@@ -12,6 +13,8 @@ const MAX_BODY = 4000;
 const MAX_QTY = 100;
 const RATE_WINDOW = 60 * 1000;
 const RATE_MAX = 3;
+const DB_TABLE = 'buyurtmalar';
+const DB_TIMEOUT = 5000;
 
 // Oddiy IP bo'yicha cheklov (funksiya "issiq" turgan vaqtda ishlaydi).
 const hits = new Map();
@@ -36,6 +39,41 @@ const som = (n) => n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' so‘m
 function phoneOk(v) {
   const d = v.replace(/\D/g, '');
   return /^[+\d\s()\-]+$/.test(v) && (d.length === 9 || (d.length === 12 && d.startsWith('998')));
+}
+
+// Buyurtmani Supabase'ga yozadi. Xato bo'lsa faqat logga yozadi va false qaytaradi —
+// bu holatda ham buyurtma Telegram'ga yuborilaveradi.
+async function saveToDb(row) {
+  const url = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
+  const key = process.env.SUPABASE_SECRET_KEY;
+  if (!url || !key) {
+    console.error('Supabase sozlanmagan: SUPABASE_URL yoki SUPABASE_SECRET_KEY yo‘q.');
+    return false;
+  }
+  const headers = {
+    'Content-Type': 'application/json',
+    apikey: key,
+    Prefer: 'return=minimal',
+  };
+  // Eski (JWT ko'rinishidagi) service_role kaliti Authorization sarlavhasini ham talab qiladi.
+  if (key.startsWith('eyJ')) headers.Authorization = `Bearer ${key}`;
+  try {
+    const res = await fetch(`${url}/rest/v1/${DB_TABLE}`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(row),
+      signal: AbortSignal.timeout(DB_TIMEOUT),
+    });
+    if (!res.ok) {
+      const detail = await res.text().catch(() => '');
+      console.error('Supabase xatosi:', res.status, detail.slice(0, 300));
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('Supabase tarmoq xatosi:', err.message);
+    return false;
+  }
 }
 
 exports.handler = async (event) => {
@@ -69,12 +107,16 @@ exports.handler = async (event) => {
   if (name.length < 2 || name.length > 60) return json(400, { ok: false, error: 'Ism noto‘g‘ri.' });
   if (!phoneOk(phone)) return json(400, { ok: false, error: 'Telefon raqami noto‘g‘ri.' });
   if (note.length > 300) return json(400, { ok: false, error: 'Izoh juda uzun.' });
+  if (data.consent !== true) {
+    return json(400, { ok: false, error: 'Ma’lumotlarni ishlatishga rozilik berilmagan.' });
+  }
 
   if (!Array.isArray(data.items) || !data.items.length || data.items.length > 3) {
     return json(400, { ok: false, error: 'Savat bo‘sh.' });
   }
   const seen = new Set();
   const lines = [];
+  const dbItems = [];
   let total = 0;
   for (const it of data.items) {
     const p = PRODUCTS[it && it.id];
@@ -85,9 +127,21 @@ exports.handler = async (event) => {
     seen.add(it.id);
     const sum = qty * p.price;
     total += sum;
+    dbItems.push({ nomi: p.name, miqdor: qty, narx: p.price, summa: sum });
     lines.push(`• ${p.name} — ${qty} dona × ${som(p.price)} = ${som(sum)}`);
   }
 
+  // 1) Avval bazaga yozamiz (muvaffaqiyatsiz bo'lsa ham davom etamiz)
+  await saveToDb({
+    ism: name,
+    telefon: phone,
+    izoh: note || null,
+    taomlar: dbItems,
+    jami: total,
+    rozilik: true,
+  });
+
+  // 2) So'ng Telegram'ga yuboramiz
   const text = [
     '🆕 Yangi buyurtma (Aqualife-Denov)',
     '',
