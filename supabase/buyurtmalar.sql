@@ -5,7 +5,7 @@ create table if not exists public.buyurtmalar (
   ism        text    not null,
   telefon    text    not null,
   izoh       text,
-  taomlar    jsonb   not null,          -- [{ nomi, miqdor, narx, summa }]
+  suvlar     jsonb   not null,          -- [{ nomi, miqdor, narx, summa }]
   jami       integer not null check (jami >= 0),
   rozilik    boolean not null check (rozilik)
 );

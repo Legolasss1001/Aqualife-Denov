@@ -136,7 +136,7 @@ exports.handler = async (event) => {
     ism: name,
     telefon: phone,
     izoh: note || null,
-    taomlar: dbItems,
+    suvlar: dbItems,
     jami: total,
     rozilik: true,
   });
