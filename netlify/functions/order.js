@@ -1,6 +1,6 @@
 // Buyurtmani Supabase bazasiga yozib, so'ng Telegram'ga yuboruvchi Netlify funksiyasi.
 // Barcha maxfiy sozlamalar faqat Netlify muhit o'zgaruvchilaridan olinadi:
-//   Telegram_Bot_Token, Telegram_Chat_ID — Telegram bot
+//   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID — Telegram bot (eski nomlar Telegram_Bot_Token, Telegram_Chat_ID ham ishlaydi)
 //   SUPABASE_URL, SUPABASE_SECRET_KEY    — Supabase loyihasi
 
 // Narxlar serverda saqlanadi — mijoz yuborgan summaga ishonilmaydi.
@@ -79,8 +79,8 @@ async function saveToDb(row) {
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return json(405, { ok: false, error: 'Faqat POST so‘rov qabul qilinadi.' });
 
-  const token = process.env.Telegram_Bot_Token;
-  const chatId = process.env.Telegram_Chat_ID;
+  const token = process.env.TELEGRAM_BOT_TOKEN || process.env.Telegram_Bot_Token;
+  const chatId = process.env.TELEGRAM_CHAT_ID || process.env.Telegram_Chat_ID;
   if (!token || !chatId) return json(500, { ok: false, error: 'Server sozlanmagan.' });
 
   const raw = event.body || '';

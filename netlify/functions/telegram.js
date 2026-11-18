@@ -1,0 +1,169 @@
+// Telegram bot webhook'i (Netlify funksiyasi).
+// Faqat Telegram yuborgan so'rovlar qabul qilinadi: X-Telegram-Bot-Api-Secret-Token
+// sarlavhasi bot tokenining sha256 xeshidan olingan birinchi 32 belgiga teng bo'lishi shart.
+// Buyurtma ma'lumoti faqat TELEGRAM_CHAT_ID dagi chatga beriladi.
+// Sozlamalar faqat Netlify muhit o'zgaruvchilaridan olinadi:
+//   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID — Telegram bot
+//   SUPABASE_URL, SUPABASE_SECRET_KEY   — Supabase loyihasi
+
+const crypto = require('crypto');
+
+const DB_TABLE = 'buyurtmalar';
+const DB_TIMEOUT = 8000;
+const PAGE = 1000;
+const TZ_OFFSET_MS = 5 * 60 * 60 * 1000; // Toshkent: UTC+5, yozgi vaqt yo'q
+const MAX_BODY = 100000;
+
+const MENU_TEXT = 'Buyurtma berish uchun pastdagi «Menyu» tugmasini bosing';
+const HELP_TEXT = [
+  'Aqualife-Denov boti buyruqlari:',
+  '',
+  '/bugun — bugungi buyurtmalar soni va jami summasi',
+  '/buyurtmalar — oxirgi 10 ta buyurtma',
+  '/start — buyruqlar ro‘yxati',
+].join('\n');
+
+// Eski nomlar (Telegram_Bot_Token, Telegram_Chat_ID) ham qo'llab-quvvatlanadi.
+const env = (name, legacy) => process.env[name] || process.env[legacy] || '';
+
+const secretFor = (token) => crypto.createHash('sha256').update(token).digest('hex').slice(0, 32);
+
+function secretOk(given, token) {
+  const a = Buffer.from(String(given || ''));
+  const b = Buffer.from(secretFor(token));
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+const ok = (reply) => ({
+  statusCode: 200,
+  headers: { 'Content-Type': 'application/json; charset=utf-8' },
+  // Javobni webhook javobining o'zida yuboramiz — alohida so'rov kerak emas.
+  body: reply ? JSON.stringify({ method: 'sendMessage', disable_web_page_preview: true, ...reply }) : '',
+});
+
+const som = (n) => Number(n || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' so‘m';
+const pad = (n) => String(n).padStart(2, '0');
+
+// UTC vaqtni Toshkent vaqtida «dd.mm.yyyy hh:mm» ko'rinishida qaytaradi.
+function tashkentTime(iso) {
+  const d = new Date(new Date(iso).getTime() + TZ_OFFSET_MS);
+  if (Number.isNaN(d.getTime())) return '—';
+  return `${pad(d.getUTCDate())}.${pad(d.getUTCMonth() + 1)}.${d.getUTCFullYear()} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+}
+
+// Toshkent bo'yicha bugungi kun chegaralari (UTC ISO ko'rinishida).
+function todayRange() {
+  const local = new Date(Date.now() + TZ_OFFSET_MS);
+  const startUtc = Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate()) - TZ_OFFSET_MS;
+  return {
+    from: new Date(startUtc).toISOString(),
+    to: new Date(startUtc + 24 * 60 * 60 * 1000).toISOString(),
+    label: `${pad(local.getUTCDate())}.${pad(local.getUTCMonth() + 1)}.${local.getUTCFullYear()}`,
+  };
+}
+
+async function db(query, range) {
+  const url = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
+  const key = process.env.SUPABASE_SECRET_KEY;
+  if (!url || !key) throw new Error('Supabase sozlanmagan');
+  const headers = { apikey: key, Accept: 'application/json' };
+  if (key.startsWith('eyJ')) headers.Authorization = `Bearer ${key}`;
+  if (range) {
+    headers['Range-Unit'] = 'items';
+    headers.Range = range;
+  }
+  const res = await fetch(`${url}/rest/v1/${DB_TABLE}?${query}`, {
+    headers,
+    signal: AbortSignal.timeout(DB_TIMEOUT),
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '');
+    throw new Error(`Supabase ${res.status}: ${detail.slice(0, 300)}`);
+  }
+  return res.json();
+}
+
+async function cmdToday() {
+  const { from, to, label } = todayRange();
+  const q = new URLSearchParams({ select: 'jami', order: 'id.asc' });
+  q.append('yaratilgan', `gte.${from}`);
+  q.append('yaratilgan', `lt.${to}`);
+  let count = 0;
+  let sum = 0;
+  for (let offset = 0; ; offset += PAGE) {
+    const rows = await db(q.toString(), `${offset}-${offset + PAGE - 1}`);
+    rows.forEach((r) => { count += 1; sum += Number(r.jami) || 0; });
+    if (rows.length < PAGE) break;
+  }
+  return [
+    `📅 Bugun (${label}, Toshkent vaqti):`,
+    '',
+    `🧾 Buyurtmalar soni: ${count} ta`,
+    `💰 Jami summa: ${som(sum)}`,
+  ].join('\n');
+}
+
+async function cmdLatest() {
+  const q = new URLSearchParams({ select: 'yaratilgan,ism,telefon,jami', order: 'yaratilgan.desc', limit: '10' });
+  const rows = await db(q.toString());
+  if (!rows.length) return 'Hozircha buyurtmalar yo‘q.';
+  const lines = ['🧾 Oxirgi 10 ta buyurtma (Toshkent vaqti):', ''];
+  rows.forEach((r, i) => {
+    lines.push(`${i + 1}. 🕒 ${tashkentTime(r.yaratilgan)}`);
+    lines.push(`   👤 ${r.ism || '—'}`);
+    lines.push(`   📞 ${r.telefon || '—'}`);
+    lines.push(`   💰 ${som(r.jami)}`);
+    lines.push('');
+  });
+  return lines.join('\n').trim();
+}
+
+exports.handler = async (event) => {
+  if (event.httpMethod !== 'POST') return { statusCode: 405, body: '' };
+
+  const token = env('TELEGRAM_BOT_TOKEN', 'Telegram_Bot_Token');
+  const ownerChat = env('TELEGRAM_CHAT_ID', 'Telegram_Chat_ID');
+  if (!token || !ownerChat) {
+    console.error('Telegram sozlanmagan: TELEGRAM_BOT_TOKEN yoki TELEGRAM_CHAT_ID yo‘q.');
+    return { statusCode: 500, body: '' };
+  }
+
+  const headers = event.headers || {};
+  if (!secretOk(headers['x-telegram-bot-api-secret-token'], token)) {
+    return { statusCode: 401, body: '' };
+  }
+
+  const raw = event.body || '';
+  if (raw.length > MAX_BODY) return ok();
+  let update;
+  try {
+    update = JSON.parse(event.isBase64Encoded ? Buffer.from(raw, 'base64').toString('utf8') : raw);
+  } catch {
+    return ok();
+  }
+
+  const msg = update && update.message;
+  if (!msg || !msg.chat) return ok();
+  const chatId = msg.chat.id;
+  const reply = (text) => ok({ chat_id: chatId, text });
+
+  // Egasidan boshqa har qanday chat — faqat «Menyu» haqida eslatma.
+  if (String(chatId) !== String(ownerChat)) return reply(MENU_TEXT);
+
+  const text = typeof msg.text === 'string' ? msg.text.trim() : '';
+  const cmd = text.startsWith('/') ? text.split(/\s+/)[0].split('@')[0].toLowerCase() : '';
+
+  if (!cmd) {
+    // Guruhda oddiy yozishmalarga javob bermaymiz, shaxsiy chatda — buyruqlar ro'yxati.
+    return msg.chat.type === 'private' ? reply(HELP_TEXT) : ok();
+  }
+
+  try {
+    if (cmd === '/bugun') return reply(await cmdToday());
+    if (cmd === '/buyurtmalar') return reply(await cmdLatest());
+  } catch (err) {
+    console.error('Buyruq xatosi:', cmd, err.message);
+    return reply('⚠️ Ma’lumotlarni olib bo‘lmadi. Birozdan so‘ng qayta urinib ko‘ring.');
+  }
+  return reply(HELP_TEXT);
+};

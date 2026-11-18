@@ -6,6 +6,7 @@
 <title>Aqualife-Denov | 19 L qadoqlangan ichimlik suvi</title>
 <meta name="description" content="Aqualife-Denov: 19 L, 10 L va 5 L qadoqlangan ichimlik suvi. Ishlab chiqaruvchidan ulgurji narxlarda, Denov bo‘ylab yetkazib berish.">
 <meta name="theme-color" content="#0A2C5E">
+<script src="https://telegram.org/js/telegram-web-app.js" async id="tgSdk"></script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 6C32 6 14 28 14 41a18 18 0 0 0 36 0C50 28 32 6 32 6z' fill='%231FAE6B'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -668,7 +669,34 @@ footer a{color:inherit}
     document.getElementById('orderTotal').textContent='Jami summa: '+som(total());
   }
 
+  // Telegram Mini App: sayt Telegram ichida ochilganda ishlaydi, oddiy brauzerda hech narsa qilmaydi.
+  var tg=null;
+  function tgUser(){return tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user;}
+  function tgFillName(){
+    var u=tgUser();
+    if(!u||fName.value)return;
+    fName.value=clean([u.first_name,u.last_name].filter(Boolean).join(' ')).slice(0,60);
+  }
+  function tgInit(){
+    var w=window.Telegram&&window.Telegram.WebApp;
+    if(tg||!w||!w.initData)return;
+    tg=w;
+    try{tg.ready();tg.expand();}catch(_){}
+    tg.MainButton.onClick(function(){tg.close();});
+    tgFillName();
+  }
+  function tgShowClose(){
+    if(!tg)return;
+    tg.MainButton.setText('Telegram oynasini yopish');
+    tg.MainButton.show();
+  }
+  function tgHideClose(){if(tg)tg.MainButton.hide();}
+  tgInit();
+  var tgSdk=document.getElementById('tgSdk');
+  if(!tg&&tgSdk)tgSdk.addEventListener('load',tgInit);
+
   orderBtn.addEventListener('click',function(){
+    tgHideClose();tgFillName();
     fillSummary();
     form.hidden=false;doneBox.hidden=true;errBox.hidden=true;msg.textContent='';
     openedAt=Date.now();
@@ -718,6 +746,7 @@ footer a{color:inherit}
       try{localStorage.setItem('aqOrderAt',String(Date.now()));}catch(_){}
       cart={};render();form.reset();
       form.hidden=true;doneBox.hidden=false;
+      tgShowClose();
     }).catch(function(){
       msg.textContent='Xatolik yuz berdi.';
       errBox.hidden=false;
