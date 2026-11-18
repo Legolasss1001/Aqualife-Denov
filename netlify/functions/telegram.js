@@ -19,6 +19,7 @@ const HELP_TEXT = [
   'Aqualife-Denov boti buyruqlari:',
   '',
   '/bugun — bugungi buyurtmalar soni va jami summasi',
+  '/hafta — shu haftadagi buyurtmalar soni va jami summasi',
   '/buyurtmalar — oxirgi 10 ta buyurtma',
   '/start — buyruqlar ro‘yxati',
 ].join('\n');
@@ -103,6 +104,50 @@ async function cmdToday() {
   ].join('\n');
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+const WEEKDAYS = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba', 'Yakshanba'];
+const dateLabel = (d) => `${pad(d.getUTCDate())}.${pad(d.getUTCMonth() + 1)}.${d.getUTCFullYear()}`;
+
+// Shu hafta: Toshkent vaqti bo'yicha dushanba 00:00 dan keyingi dushanba 00:00 gacha.
+async function cmdWeek() {
+  const local = new Date(Date.now() + TZ_OFFSET_MS);
+  const todayStart = Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate());
+  const mondayLocal = todayStart - ((local.getUTCDay() + 6) % 7) * DAY_MS; // 0 = dushanba
+  const from = new Date(mondayLocal - TZ_OFFSET_MS).toISOString();
+  const to = new Date(mondayLocal + 7 * DAY_MS - TZ_OFFSET_MS).toISOString();
+
+  const q = new URLSearchParams({ select: 'yaratilgan,jami', order: 'id.asc' });
+  q.append('yaratilgan', `gte.${from}`);
+  q.append('yaratilgan', `lt.${to}`);
+  const days = WEEKDAYS.map((name) => ({ name, count: 0, sum: 0 }));
+  let count = 0;
+  let sum = 0;
+  for (let offset = 0; ; offset += PAGE) {
+    const rows = await db(q.toString(), `${offset}-${offset + PAGE - 1}`);
+    rows.forEach((r) => {
+      const jami = Number(r.jami) || 0;
+      const idx = Math.floor((new Date(r.yaratilgan).getTime() + TZ_OFFSET_MS - mondayLocal) / DAY_MS);
+      if (idx >= 0 && idx < 7) { days[idx].count += 1; days[idx].sum += jami; }
+      count += 1;
+      sum += jami;
+    });
+    if (rows.length < PAGE) break;
+  }
+
+  const lines = [
+    `📆 Shu hafta (${dateLabel(new Date(mondayLocal))} – ${dateLabel(new Date(mondayLocal + 6 * DAY_MS))}, Toshkent vaqti):`,
+    '',
+    `🧾 Buyurtmalar soni: ${count} ta`,
+    `💰 Jami summa: ${som(sum)}`,
+  ];
+  const active = days.filter((d) => d.count);
+  if (active.length) {
+    lines.push('', 'Kunlar bo‘yicha:');
+    active.forEach((d) => lines.push(`• ${d.name}: ${d.count} ta, ${som(d.sum)}`));
+  }
+  return lines.join('\n');
+}
+
 async function cmdLatest() {
   const q = new URLSearchParams({ select: 'yaratilgan,ism,telefon,jami', order: 'yaratilgan.desc', limit: '10' });
   const rows = await db(q.toString());
@@ -160,6 +205,7 @@ exports.handler = async (event) => {
 
   try {
     if (cmd === '/bugun') return reply(await cmdToday());
+    if (cmd === '/hafta') return reply(await cmdWeek());
     if (cmd === '/buyurtmalar') return reply(await cmdLatest());
   } catch (err) {
     console.error('Buyruq xatosi:', cmd, err.message);
