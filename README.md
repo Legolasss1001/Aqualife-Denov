@@ -13,7 +13,7 @@ Sayt Netlify'da ham ishlashda davom etadi. Hostingda esa `server.js` statik sahi
 | --- | --- |
 | Node.js version | 22 |
 | Application mode | Production |
-| Application root | `burgersmash-app` |
+| Application root | `akvalife-app` |
 | Application startup file | `server.js` |
 
 **Muhit o'zgaruvchilari** (shu sahifadagi *Environment variables* bo'limida):
@@ -25,4 +25,4 @@ Sayt Netlify'da ham ishlashda davom etadi. Hostingda esa `server.js` statik sahi
 
 O'zgaruvchilarni qo'shgach, *Restart* tugmasini bosing.
 
-**Avtomatik yuklash:** `main` ga har push bo'lganda GitHub Actions (*Hostingga yuklash*) fayllarni FTPS orqali yuklaydi va `tmp/restart.txt` orqali ilovani qayta ishga tushiradi. GitHub → *Settings → Secrets and variables → Actions* bo'limida `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` sirlarini qo'shing (FTP hisobi papkasi ilova papkasiga — `burgersmash-app` — qaragan bo'lishi kerak).
+**Avtomatik yuklash:** `main` ga har push bo'lganda GitHub Actions (*Hostingga yuklash*) fayllarni FTPS orqali yuklaydi va `tmp/restart.txt` orqali ilovani qayta ishga tushiradi. GitHub → *Settings → Secrets and variables → Actions* bo'limida `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` sirlarini qo'shing (FTP hisobi papkasi ilova papkasiga — `akvalife-app` — qaragan bo'lishi kerak).
