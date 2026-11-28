@@ -1,7 +1,9 @@
-// Buyurtmani Supabase bazasiga yozib, so'ng Telegram'ga yuboruvchi Netlify funksiyasi.
-// Barcha maxfiy sozlamalar faqat Netlify muhit o'zgaruvchilaridan olinadi:
+// Buyurtmani bazaga yozib, so'ng Telegram'ga yuboruvchi Netlify funksiyasi.
+// Barcha maxfiy sozlamalar faqat muhit o'zgaruvchilaridan olinadi:
 //   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID — Telegram bot (eski nomlar Telegram_Bot_Token, Telegram_Chat_ID ham ishlaydi)
-//   SUPABASE_URL, SUPABASE_SECRET_KEY    — Supabase loyihasi
+//   Baza — ../lib/db.js ga qarang (hostingda PostgreSQL, Netlify'da Supabase).
+
+const db = require('../lib/db');
 
 // Narxlar serverda saqlanadi — mijoz yuborgan summaga ishonilmaydi.
 const PRODUCTS = {
@@ -13,8 +15,6 @@ const MAX_BODY = 4000;
 const MAX_QTY = 100;
 const RATE_WINDOW = 60 * 1000;
 const RATE_MAX = 3;
-const DB_TABLE = 'buyurtmalar';
-const DB_TIMEOUT = 5000;
 
 // Oddiy IP bo'yicha cheklov (funksiya "issiq" turgan vaqtda ishlaydi).
 const hits = new Map();
@@ -39,41 +39,6 @@ const som = (n) => n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' so‘m
 function phoneOk(v) {
   const d = v.replace(/\D/g, '');
   return /^[+\d\s()\-]+$/.test(v) && (d.length === 9 || (d.length === 12 && d.startsWith('998')));
-}
-
-// Buyurtmani Supabase'ga yozadi. Xato bo'lsa faqat logga yozadi va false qaytaradi —
-// bu holatda ham buyurtma Telegram'ga yuborilaveradi.
-async function saveToDb(row) {
-  const url = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
-  const key = process.env.SUPABASE_SECRET_KEY;
-  if (!url || !key) {
-    console.error('Supabase sozlanmagan: SUPABASE_URL yoki SUPABASE_SECRET_KEY yo‘q.');
-    return false;
-  }
-  const headers = {
-    'Content-Type': 'application/json',
-    apikey: key,
-    Prefer: 'return=minimal',
-  };
-  // Eski (JWT ko'rinishidagi) service_role kaliti Authorization sarlavhasini ham talab qiladi.
-  if (key.startsWith('eyJ')) headers.Authorization = `Bearer ${key}`;
-  try {
-    const res = await fetch(`${url}/rest/v1/${DB_TABLE}`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(row),
-      signal: AbortSignal.timeout(DB_TIMEOUT),
-    });
-    if (!res.ok) {
-      const detail = await res.text().catch(() => '');
-      console.error('Supabase xatosi:', res.status, detail.slice(0, 300));
-      return false;
-    }
-    return true;
-  } catch (err) {
-    console.error('Supabase tarmoq xatosi:', err.message);
-    return false;
-  }
 }
 
 exports.handler = async (event) => {
@@ -132,7 +97,8 @@ exports.handler = async (event) => {
   }
 
   // 1) Avval bazaga yozamiz (muvaffaqiyatsiz bo'lsa ham davom etamiz)
-  await saveToDb({
+  // db.saveOrder xato tashlamaydi: yozib bo'lmasa logga yozadi va false qaytaradi.
+  await db.saveOrder({
     ism: name,
     telefon: phone,
     izoh: note || null,

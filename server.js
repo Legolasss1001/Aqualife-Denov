@@ -1,5 +1,5 @@
 // cPanel hosting (Node.js 22, Phusion Passenger) uchun server.
-// Faqat Node'ning o'z modullari ishlatiladi — npm kutubxonalari kerak emas.
+// Server faqat Node'ning o'z modullarini ishlatadi (funksiyalar bazaga ulanish uchun "pg" paketidan foydalanadi).
 //
 //  - Statik fayllarni beradi (/ -> index.html).
 //  - /.netlify/functions/<nom> so'rovlarini netlify/functions/<nom>.js dagi
@@ -15,7 +15,7 @@ const path = require('path');
 const ROOT = __dirname;
 const PORT = process.env.PORT || 3000;
 const FUNCTIONS_DIR = path.join(ROOT, 'netlify', 'functions');
-const FUNCTIONS = new Set(['order', 'telegram', 'telegram-setup']);
+const FUNCTIONS = new Set(['order', 'telegram', 'telegram-setup', 'kochirish', 'zaxira']);
 const FUNCTION_PREFIX = '/.netlify/functions/';
 const MAX_BODY = 1024 * 1024; // 1 MB
 

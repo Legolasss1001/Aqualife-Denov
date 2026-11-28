@@ -4,13 +4,11 @@
 // Buyurtma ma'lumoti faqat TELEGRAM_CHAT_ID dagi chatga beriladi.
 // Sozlamalar faqat Netlify muhit o'zgaruvchilaridan olinadi:
 //   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID — Telegram bot
-//   SUPABASE_URL, SUPABASE_SECRET_KEY   — Supabase loyihasi
+//   Baza — ../lib/db.js ga qarang (hostingda PostgreSQL, Netlify'da Supabase).
 
 const crypto = require('crypto');
+const db = require('../lib/db');
 
-const DB_TABLE = 'buyurtmalar';
-const DB_TIMEOUT = 8000;
-const PAGE = 1000;
 const TZ_OFFSET_MS = 5 * 60 * 60 * 1000; // Toshkent: UTC+5, yozgi vaqt yo'q
 const MAX_BODY = 100000;
 
@@ -63,39 +61,9 @@ function todayRange() {
   };
 }
 
-async function db(query, range) {
-  const url = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
-  const key = process.env.SUPABASE_SECRET_KEY;
-  if (!url || !key) throw new Error('Supabase sozlanmagan');
-  const headers = { apikey: key, Accept: 'application/json' };
-  if (key.startsWith('eyJ')) headers.Authorization = `Bearer ${key}`;
-  if (range) {
-    headers['Range-Unit'] = 'items';
-    headers.Range = range;
-  }
-  const res = await fetch(`${url}/rest/v1/${DB_TABLE}?${query}`, {
-    headers,
-    signal: AbortSignal.timeout(DB_TIMEOUT),
-  });
-  if (!res.ok) {
-    const detail = await res.text().catch(() => '');
-    throw new Error(`Supabase ${res.status}: ${detail.slice(0, 300)}`);
-  }
-  return res.json();
-}
-
 async function cmdToday() {
   const { from, to, label } = todayRange();
-  const q = new URLSearchParams({ select: 'jami', order: 'id.asc' });
-  q.append('yaratilgan', `gte.${from}`);
-  q.append('yaratilgan', `lt.${to}`);
-  let count = 0;
-  let sum = 0;
-  for (let offset = 0; ; offset += PAGE) {
-    const rows = await db(q.toString(), `${offset}-${offset + PAGE - 1}`);
-    rows.forEach((r) => { count += 1; sum += Number(r.jami) || 0; });
-    if (rows.length < PAGE) break;
-  }
+  const { count, sum } = await db.todayStats(from, to);
   return [
     `📅 Bugun (${label}, Toshkent vaqti):`,
     '',
@@ -116,23 +84,17 @@ async function cmdWeek() {
   const from = new Date(mondayLocal - TZ_OFFSET_MS).toISOString();
   const to = new Date(mondayLocal + 7 * DAY_MS - TZ_OFFSET_MS).toISOString();
 
-  const q = new URLSearchParams({ select: 'yaratilgan,jami', order: 'id.asc' });
-  q.append('yaratilgan', `gte.${from}`);
-  q.append('yaratilgan', `lt.${to}`);
   const days = WEEKDAYS.map((name) => ({ name, count: 0, sum: 0 }));
   let count = 0;
   let sum = 0;
-  for (let offset = 0; ; offset += PAGE) {
-    const rows = await db(q.toString(), `${offset}-${offset + PAGE - 1}`);
-    rows.forEach((r) => {
-      const jami = Number(r.jami) || 0;
-      const idx = Math.floor((new Date(r.yaratilgan).getTime() + TZ_OFFSET_MS - mondayLocal) / DAY_MS);
-      if (idx >= 0 && idx < 7) { days[idx].count += 1; days[idx].sum += jami; }
-      count += 1;
-      sum += jami;
-    });
-    if (rows.length < PAGE) break;
-  }
+  const rows = await db.ordersBetween(from, to);
+  rows.forEach((r) => {
+    const jami = Number(r.jami) || 0;
+    const idx = Math.floor((new Date(r.yaratilgan).getTime() + TZ_OFFSET_MS - mondayLocal) / DAY_MS);
+    if (idx >= 0 && idx < 7) { days[idx].count += 1; days[idx].sum += jami; }
+    count += 1;
+    sum += jami;
+  });
 
   const lines = [
     `📆 Shu hafta (${dateLabel(new Date(mondayLocal))} – ${dateLabel(new Date(mondayLocal + 6 * DAY_MS))}, Toshkent vaqti):`,
@@ -149,8 +111,7 @@ async function cmdWeek() {
 }
 
 async function cmdLatest() {
-  const q = new URLSearchParams({ select: 'yaratilgan,ism,telefon,jami', order: 'yaratilgan.desc', limit: '10' });
-  const rows = await db(q.toString());
+  const rows = await db.lastOrders(10);
   if (!rows.length) return 'Hozircha buyurtmalar yo‘q.';
   const lines = ['🧾 Oxirgi 10 ta buyurtma (Toshkent vaqti):', ''];
   rows.forEach((r, i) => {
