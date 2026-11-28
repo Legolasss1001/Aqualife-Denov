@@ -11,6 +11,11 @@
 const db = require('../lib/db');
 
 const TITLE = 'Buyurtmalarni ko‘chirish';
+// Xato sababi (kalit va parol bo'lmaydi: Supabase javobi yoki tarmoq xatosi kodi).
+const reason = (err) => {
+  const cause = err && err.cause ? ` (${err.cause.code || err.cause.message})` : '';
+  return `Sabab: ${String((err && err.message) || err)}${cause}`.slice(0, 500);
+};
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 function page(kind, title, detail) {
@@ -50,7 +55,7 @@ exports.handler = async () => {
       orders = await db.supabaseAllOrders();
     } catch (err) {
       console.error('Ko‘chirish: Supabase xatosi:', err.message);
-      return page('err', '❌ Supabase’dan buyurtmalarni olib bo‘lmadi', 'SUPABASE_URL va SUPABASE_SECRET_KEY muhit o‘zgaruvchilarini tekshiring.');
+      return page('err', '❌ Supabase’dan buyurtmalarni olib bo‘lmadi', `SUPABASE_URL va SUPABASE_SECRET_KEY muhit o‘zgaruvchilarini tekshiring. ${reason(err)}`);
     }
 
     const result = await db.importOrders(orders);
@@ -60,6 +65,6 @@ exports.handler = async () => {
     return page('ok', `✅ ${result.imported} ta buyurtma ko‘chirildi`);
   } catch (err) {
     console.error('Ko‘chirish xatosi:', err.message);
-    return page('err', '❌ Ko‘chirishda xatolik', 'Hech narsa o‘zgartirilmadi. Batafsil ma’lumot server logida.');
+    return page('err', '❌ Ko‘chirishda xatolik', `Hech narsa o‘zgartirilmadi. ${reason(err)}`);
   }
 };
